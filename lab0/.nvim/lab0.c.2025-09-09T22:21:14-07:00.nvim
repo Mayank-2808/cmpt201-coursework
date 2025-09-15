@@ -1,4 +1,0 @@
-#include
-int main () {
-  printf("Hello CMPT201 world!\n");
-}
