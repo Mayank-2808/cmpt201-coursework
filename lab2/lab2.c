@@ -1,0 +1,37 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+int main() {
+
+  char line[256];
+
+  while (1) {
+    printf("Enter programs to run.\n> ");
+    if (!fgets(line, sizeof(line), stdin))
+      break;
+
+    line[strcspn(line, "\n")] = '\0';
+    if (line[0] == '\0')
+      continue;
+
+    pid_t pid = fork();
+
+    if (pid < 0) {
+      perror("fork");
+      continue;
+    }
+
+    if (pid == 0) {
+      execl(line, line, (char *)NULL);
+      perror("Exec failure");
+
+      _exit(1);
+    } else {
+      int status;
+      waitpid(pid, &status, 0);
+    }
+  }
+}
