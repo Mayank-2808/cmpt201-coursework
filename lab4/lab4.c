@@ -1,0 +1,83 @@
+#define _DEFAULT_SOURCE
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#ifndef BUF_SIZE
+#define BUF_SIZE 256
+#endif
+
+static void writef(const char *fmt, ...) {
+  char buf[BUF_SIZE];
+  va_list ap;
+  va_start(ap, fmt);
+  int len = vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+
+  if (len < 0)
+    _exit(1);
+
+  if (len > (int)sizeof(buf))
+    len = (int)sizeof(buf);
+
+  (void)write(STDOUT_FILENO, buf, (size_t)len);
+}
+
+struct header {
+  uint64_t size;
+  struct header *next;
+};
+
+enum { EXTRA_BYTES = 256, BLOCK_BYTES = 128 };
+
+static void print_header(const char *label, struct header *h) {
+  writef("%s size: %lu\n", label, (unsigned long)h->size);
+  writef("%s next: %p\n", label, (void *)h->next);
+}
+
+int main(void) {
+
+  void *start = sbrk(EXTRA_BYTES);
+
+  if (start == (void *)-1) {
+    writef("sbrk() failed\n");
+    return 1;
+  }
+
+  struct header *first = (struct header *)(start);
+  struct header *second = (struct header *)((uint8_t *)start + BLOCK_BYTES);
+
+  first->size = BLOCK_BYTES;
+  first->next = NULL;
+
+  second->size = BLOCK_BYTES;
+  second->next = first;
+
+  writef("first block:  %p\n", (void *)first);
+  writef("second block: %p\n", (void *)second);
+
+  print_header("first block", first);
+  print_header("second block", second);
+
+  size_t header_sz = sizeof(struct header);
+  size_t data_bytes = BLOCK_BYTES - header_sz;
+
+  uint8_t *first_data = (uint8_t *)first + header_sz;
+  uint8_t *second_data = (uint8_t *)second + header_sz;
+
+  memset(first_data, 0, data_bytes);
+  memset(second_data, 1, data_bytes);
+
+  for (size_t i = 0; i < data_bytes; ++i) {
+    writef("%u\n", (unsigned)first_data[i]);
+  }
+
+  for (size_t i = 0; i < data_bytes; ++i) {
+    writef("%u\n", (unsigned)second_data[i]);
+  }
+
+  return 0;
+}
