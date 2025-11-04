@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.22)
+
+project(
+  Lab8
+  VERSION 1.0
+  DESCRIPTION "This is an example for the lab."
+  LANGUAGES C)
+
+set(CMAKE_BUILD_TYPE Debug)
+add_compile_options(-fsanitize=thread -g -01)
+add_link_options(-fsanitize=thread -g -01)
+add_compile_options(-pthread)
+add_link_options(-pthread)
+add_executable(main src/lab8.c)
+target_include_directories(main PRIVATE include)
