@@ -8,27 +8,26 @@ int main() {
   char *line = NULL;
   size_t size = 0;
 
-  printf("Please enter some text: ");
+  while (1) {
+    printf("Please enter some text: ");
+    ssize_t chars = getline(&line, &size, stdin);
 
-  ssize_t chars = getline(&line, &size, stdin);
+    if (chars == -1) {
+      break;
+    }
 
-  if (chars == -1) {
-    perror("getline");
-    free(line);
-    return EXIT_FAILURE;
-  }
+    if (line[chars - 1] == '\n') {
+      line[chars - 1] = '\0';
+    }
+    printf("Tokens:\n");
 
-  if (line[chars - 1] == '\n') {
-    line[chars - 1] = '\0';
-  }
-  printf("Tokens:\n");
+    char *saveptr;
+    char *token = strtok_r(line, " ", &saveptr);
 
-  char *saveptr;
-  char *token = strtok_r(line, " ", &saveptr);
-
-  while (token != NULL) {
-    printf(" %s\n", token);
-    token = strtok_r(NULL, " ", &saveptr);
+    while (token != NULL) {
+      printf(" %s\n", token);
+      token = strtok_r(NULL, " ", &saveptr);
+    }
   }
 
   free(line);
